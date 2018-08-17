@@ -21,3 +21,6 @@ git clone https://github.com/yohei-takeda/recruitment-supporter.git
 cd ./recruiting-supporter
 go run main.go <recruitment_page_url> <company_name> <userId> <password>
 ```
+
+### 参考：
+https://qiita.com/0829/items/c1e494bb128ade5f0872
