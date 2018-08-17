@@ -8,7 +8,8 @@
 webdriver(今はchromeのみサポートです）：
 ```
 # for mac
-brew install chromedriver
+brew tap homebrew/cask
+brew cask install chromedriver
 ```
 agoutiをインストール
 ```
