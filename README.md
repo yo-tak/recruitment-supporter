@@ -14,7 +14,7 @@ agoutiをインストール
 ```
 go get github.com/sclevine/agouti
 ```
-3. go ファイルを実行
+3. ファイルを実行
 //TODO いずれもっと簡略に！
 ```
 git clone https://github.com/yohei-takeda/recruitment-supporter.git
