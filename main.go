@@ -7,11 +7,13 @@ import (
 
 	"github.com/sclevine/agouti"
 	"github.com/sclevine/agouti/api"
+
+	"recruiting-supporter/auth"
 )
 
 func main() {
 	// extract user information
-	recruitPageUrl, companyName, userid, password, err := extractArgs()
+	recruitPageUrl, companyName, userid, password, signinMethod, err := extractArgs()
 	if err != nil {
 		log.Fatalf("Failed to extract necessary args: %v", err)
 	}
@@ -31,7 +33,7 @@ func main() {
 	if err := page.Navigate(recruitPageUrl); err != nil {
 		log.Fatalf("Failed to navigate to main page: %v", err)
 	}
-	if err := login(page, userid, password); err != nil {
+	if err := auth.Authenticate(page, signinMethod, userid, password); err != nil {
 		log.Fatalf("Failed to login: %v", err)
 	}
 
@@ -43,37 +45,20 @@ func main() {
 	log.Println("Finished! Thank you so much for your support!!")
 }
 
-func extractArgs() (string, string, string, string, error) {
+func extractArgs() (string, string, string, string, string, error) {
 	args := os.Args
 	if len(args) < 5 {
-		return "", "", "", "", errors.New("not enough args; I need recruit page url, company name, userId, and password")
+		return "", "", "", "", "", errors.New("not enough args; recruit page url, company name, userId, and password are required")
 	}
 	recruitPageUrl := args[1]
 	companyName := args[2]
 	userid := args[3]
 	password := args[4]
-	return recruitPageUrl, companyName, userid, password, nil
-}
-
-func login(page *agouti.Page, name string, password string) error {
-	// TODO is there any smarter way to handle the errors?
-	if err := page.Find("ul.nav .ui-show-modal").Click(); err != nil {
-		log.Printf("Failed to open login dialog: %v\n", err)
-		return err
+	signinMethod := ""
+	if len(args) > 5 {
+		signinMethod = args[5]
 	}
-	if err := page.FindByID("login_user_email").Fill(name); err != nil {
-		log.Printf("Failed to fill in user email: %v\n", err)
-		return err
-	}
-	if err := page.FindByID("login_user_password").Fill(password); err != nil {
-		log.Printf("Failed to fill in password: %v\n", err)
-		return err
-	}
-	if err := page.Find("#login_new_user input[type=\"submit\"]").Click(); err != nil {
-		log.Printf("Failed to click login page: %v\n", err)
-		return err
-	}
-	return nil
+	return recruitPageUrl, companyName, userid, password, signinMethod, nil
 }
 
 func supportOffers(page *agouti.Page) {
