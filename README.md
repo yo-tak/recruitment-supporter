@@ -20,7 +20,9 @@ go get github.com/sclevine/agouti
 ```
 git clone https://github.com/yohei-takeda/recruitment-supporter.git
 cd ./recruiting-supporter
-go run main.go <recruitment_page_url> <company_name> <userId> <password>
+go build
+// to authenticate using facebook account, parameter "signin_method" should be "facebook". Otherwise, keep it empty.
+./recruiting-supporter <recruitment_page_url> <company_name> <userId> <password> <signin_method>
 ```
 
 ### 参考：
