@@ -4,16 +4,15 @@ import (
 	"errors"
 	"log"
 	"os"
+	"time"
 
 	"github.com/sclevine/agouti"
 	"github.com/sclevine/agouti/api"
-
-	"recruiting-supporter/auth"
 )
 
 func main() {
 	// extract user information
-	recruitPageUrl, companyName, userid, password, signinMethod, err := extractArgs()
+	recruitPageURL, companyName, userid, password, signinMethod, err := extractArgs()
 	if err != nil {
 		log.Fatalf("Failed to extract necessary args: %v", err)
 	}
@@ -30,14 +29,14 @@ func main() {
 	}
 
 	// open wantedly main page
-	if err := page.Navigate(recruitPageUrl); err != nil {
+	if err := page.Navigate(recruitPageURL); err != nil {
 		log.Fatalf("Failed to navigate to main page: %v", err)
 	}
-	if err := auth.Authenticate(page, signinMethod, userid, password); err != nil {
+	if err := Authenticate(page, signinMethod, userid, password); err != nil {
 		log.Fatalf("Failed to login: %v", err)
 	}
 
-	if err := page.Navigate(recruitPageUrl + "/companies/" + companyName + "/projects"); err != nil {
+	if err := page.Navigate(recruitPageURL + "/companies/" + companyName + "/projects"); err != nil {
 		log.Fatalf("Failed to open company page: %v", err)
 	}
 	// TODO I just couldn't afford the time to handle error here
@@ -50,7 +49,7 @@ func extractArgs() (string, string, string, string, string, error) {
 	if len(args) < 5 {
 		return "", "", "", "", "", errors.New("not enough args; recruit page url, company name, userId, and password are required")
 	}
-	recruitPageUrl := args[1]
+	recruitPageURL := args[1]
 	companyName := args[2]
 	userid := args[3]
 	password := args[4]
@@ -58,7 +57,7 @@ func extractArgs() (string, string, string, string, string, error) {
 	if len(args) > 5 {
 		signinMethod = args[5]
 	}
-	return recruitPageUrl, companyName, userid, password, signinMethod, nil
+	return recruitPageURL, companyName, userid, password, signinMethod, nil
 }
 
 func supportOffers(page *agouti.Page) {
@@ -81,14 +80,14 @@ func supportOffer(elem *api.Element, page *agouti.Page, mainWindow *api.Window) 
 		log.Fatalf("Failed to click support button for elem: %v, err: %v", elem, err)
 	}
 
+	time.Sleep(2 * time.Second) // wait until twitter window is ready
 	// close twitter window
 	// TODO should improve logic to handle windows
-	// move to new Twitter window
-	page.NextWindow()
-	// close Twitter window
-	page.CloseWindow()
-	// move back to recruitment page window
-	page.Session().SetWindow(mainWindow)
+	page.NextWindow()                    // move to new Twitter window
+	page.CloseWindow()                   // close Twitter window
+	page.Session().SetWindow(mainWindow) // move back to recruitment page window
+
+	time.Sleep(1 * time.Second) // wait until wantedly window is ready again
 
 	// close support dialog. when it's your first time to supported the offer,
 	// the caption will be "応援しない". otherwise it will be "閉じる""
