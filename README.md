@@ -4,7 +4,7 @@
 
 ## 利用方法
 ### 簡易版
-1. `recruitment-supporter/blob/master/recruiting-supporter` をダウンロード
+1. [recruiting-supporter](https://github.com/yohei-takeda/recruitment-supporter/raw/master/recruiting-supporter) をダウンロード
 2. 以下実行：
 ```
 // to authenticate using facebook account, parameter "signin_method" should be "facebook". Otherwise, keep it empty.
