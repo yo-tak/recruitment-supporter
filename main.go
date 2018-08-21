@@ -32,7 +32,7 @@ func main() {
 	if err := page.Navigate(recruitPageURL); err != nil {
 		log.Fatalf("Failed to navigate to main page: %v", err)
 	}
-	if err := Authenticate(page, signinMethod, userid, password); err != nil {
+	if err := authenticate(page, signinMethod, userid, password); err != nil {
 		log.Fatalf("Failed to login: %v", err)
 	}
 

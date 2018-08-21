@@ -6,8 +6,7 @@ import (
 	"github.com/sclevine/agouti"
 )
 
-// Authenticate authentication for recruitment page
-func Authenticate(page *agouti.Page, signinMethod string, username string, password string) error {
+func authenticate(page *agouti.Page, signinMethod string, username string, password string) error {
 
 	switch signinMethod {
 	case "facebook":
