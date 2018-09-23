@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"log"
 	"os"
 	"time"
@@ -10,54 +9,63 @@ import (
 	"github.com/sclevine/agouti/api"
 )
 
+type statusCode int
+
+const (
+	success          statusCode = iota
+	unsufficientCfg  statusCode = iota
+	driverError      statusCode = iota
+	signinFailed     statusCode = iota
+	recruitPageError statusCode = iota
+	otherFailure     statusCode = iota
+)
+
 func main() {
+	result := execSupport()
+	os.Exit(int(result))
+}
+
+func execSupport() statusCode {
+
 	// extract user information
-	recruitPageURL, companyName, userid, password, signinMethod, err := extractArgs()
+	cfg, err := getCfg()
 	if err != nil {
-		log.Fatalf("Failed to extract necessary args: %v", err)
+		log.Printf("Failed to extract necessary args: %v", err)
+		return unsufficientCfg
 	}
 
 	driver := agouti.ChromeDriver()
 	if err := driver.Start(); err != nil {
-		log.Fatalf("Failed to start driver: %v", err)
+		log.Printf("Failed to start driver: %v", err)
+		return driverError
 	}
 	defer driver.Stop()
 
 	page, err := driver.NewPage(agouti.Browser("chrome"))
 	if err != nil {
-		log.Fatalf("Failed to open page: %v", err)
+		log.Printf("Failed to open page: %v", err)
+		return driverError
 	}
+	defer page.CloseWindow()
 
 	// open wantedly main page
-	if err := page.Navigate(recruitPageURL); err != nil {
-		log.Fatalf("Failed to navigate to main page: %v", err)
+	if err := page.Navigate(cfg.URL); err != nil {
+		log.Printf("Failed to navigate to main page: %v", err)
+		return recruitPageError
 	}
-	if err := authenticate(page, signinMethod, userid, password); err != nil {
-		log.Fatalf("Failed to login: %v", err)
+	if err := authenticate(page, cfg.SigninMethod, cfg.Mail, cfg.Password); err != nil {
+		log.Printf("Failed to sign in: %v", err)
+		return signinFailed
 	}
 
-	if err := page.Navigate(recruitPageURL + "/companies/" + companyName + "/projects"); err != nil {
-		log.Fatalf("Failed to open company page: %v", err)
+	if err := page.Navigate(cfg.URL + "/companies/" + cfg.Company + "/projects"); err != nil {
+		log.Printf("Failed to open company page: %v", err)
+		return recruitPageError
 	}
 	// TODO I just couldn't afford the time to handle error here
 	supportOffers(page)
 	log.Println("Finished! Thank you so much for your support!!")
-}
-
-func extractArgs() (string, string, string, string, string, error) {
-	args := os.Args
-	if len(args) < 5 {
-		return "", "", "", "", "", errors.New("not enough args; recruit page url, company name, userId, and password are required")
-	}
-	recruitPageURL := args[1]
-	companyName := args[2]
-	userid := args[3]
-	password := args[4]
-	signinMethod := ""
-	if len(args) > 5 {
-		signinMethod = args[5]
-	}
-	return recruitPageURL, companyName, userid, password, signinMethod, nil
+	return success
 }
 
 func supportOffers(page *agouti.Page) {
@@ -80,7 +88,7 @@ func supportOffer(elem *api.Element, page *agouti.Page, mainWindow *api.Window) 
 		log.Fatalf("Failed to click support button for elem: %v, err: %v", elem, err)
 	}
 
-	time.Sleep(2 * time.Second) // wait until twitter window is ready
+	time.Sleep(1500 * time.Millisecond) // wait until twitter window is ready
 	// close twitter window
 	// TODO should improve logic to handle windows
 	page.NextWindow()                    // move to new Twitter window
