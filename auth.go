@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"log"
+	"strings"
 
 	"github.com/sclevine/agouti"
 )
@@ -17,12 +19,23 @@ func authenticate(page *agouti.Page, signinMethod string, username string, passw
 		page.Find(".login-button.facebook").Click()
 		if err := page.FindByID("email").Fill(username); err != nil {
 			log.Printf("Failed to fill in user email: %v\n", err)
+			return err
 		}
 		if err := page.FindByID("pass").Fill(password); err != nil {
 			log.Printf("Failed to fill in user password: %v\n", err)
+			return err
 		}
 		if err := page.FindByID("loginbutton").Click(); err != nil {
 			log.Printf("Failed to click login button: %v\n", err)
+			return err
+		}
+		url, err := page.URL()
+		if err != nil {
+			log.Printf("Failed to get URL after signin attempt: %v\n", err)
+			return err
+		}
+		if strings.Contains(url, "facebook") {
+			return errors.New("Failed to signin; mail address and/or password is wrong")
 		}
 		return nil
 	default: // default case supports signin that does not use any third party
@@ -42,6 +55,14 @@ func authenticate(page *agouti.Page, signinMethod string, username string, passw
 		if err := page.Find("#login_new_user input[type=\"submit\"]").Click(); err != nil {
 			log.Printf("Failed to click login page: %v\n", err)
 			return err
+		}
+		url, err := page.URL()
+		if err != nil {
+			log.Printf("Failed to get URL after signin attempt: %v\n", err)
+			return err
+		}
+		if strings.Contains(url, "sign_in") {
+			return errors.New("mail address and/or password is wrong")
 		}
 		return nil
 	}
