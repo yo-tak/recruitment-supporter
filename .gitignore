@@ -13,3 +13,6 @@ vendor/
  # debug
 debug
 debug_test
+
+# config files
+supporterCfg.json

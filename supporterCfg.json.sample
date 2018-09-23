@@ -1,0 +1,7 @@
+{
+    "url": "https://www.hoge.com",
+    "company": "mycompany",
+    "mail": "dummy@sample.jp",
+    "password": "password",
+    "signinMethod": "facebook"
+}
