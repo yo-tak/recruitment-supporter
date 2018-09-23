@@ -21,6 +21,7 @@ const (
 )
 
 func main() {
+	// deligate procedure to execSupport func so that deferred process will be executed
 	result := execSupport()
 	os.Exit(int(result))
 }
@@ -48,7 +49,7 @@ func execSupport() statusCode {
 	}
 	defer page.CloseWindow()
 
-	// open wantedly main page
+	// open main page
 	if err := page.Navigate(cfg.URL); err != nil {
 		log.Printf("Failed to navigate to main page: %v", err)
 		return recruitPageError
@@ -62,39 +63,55 @@ func execSupport() statusCode {
 		log.Printf("Failed to open company page: %v", err)
 		return recruitPageError
 	}
-	// TODO I just couldn't afford the time to handle error here
-	supportOffers(page)
+	if err := supportOffers(page); err != nil {
+		log.Printf("Failed in supporting process: %v", err)
+		return recruitPageError
+	}
 	log.Println("Finished! Thank you so much for your support!!")
 	return success
 }
 
-func supportOffers(page *agouti.Page) {
+func supportOffers(page *agouti.Page) error {
 	supportIcons := page.AllByClass("wt-icon-support")
 	elems, err := supportIcons.Elements()
 	if err != nil {
-		log.Fatalf("Failed to extract support icons: %v", err)
+		log.Printf("Failed to extract support icons: %v\n", err)
+		return err
 	}
-	mainWindow, _ := page.Session().GetWindow()
+	mainWindow, err := page.Session().GetWindow()
+	if err != nil {
+		log.Printf("Failed to get new window: %v\n", err)
+		return err
+	}
 	for _, elem := range elems {
-		supportOffer(elem, page, mainWindow)
+		if err := supportOffer(elem, page, mainWindow); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func supportOffer(elem *api.Element, page *agouti.Page, mainWindow *api.Window) {
+func supportOffer(elem *api.Element, page *agouti.Page, mainWindow *api.Window) error {
 	// open support dialog and click support by twitter
 	elem.Click()
 	supportDialog := page.FindByID("wtd-modal-portal__default")
 	if err := supportDialog.FindByButton("Twitterで応援").Click(); err != nil {
-		log.Fatalf("Failed to click support button for elem: %v, err: %v", elem, err)
+		log.Printf("Failed to click support button for elem: %v, err: %v", elem, err)
+		return err
 	}
 
 	time.Sleep(1500 * time.Millisecond) // wait until twitter window is ready
 	// close twitter window
 	// TODO should improve logic to handle windows
-	page.NextWindow()                    // move to new Twitter window
-	page.CloseWindow()                   // close Twitter window
-	page.Session().SetWindow(mainWindow) // move back to recruitment page window
-
+	if err := page.NextWindow(); err != nil { // move to new Twitter window
+		return err
+	}
+	if err := page.CloseWindow(); err != nil { // close Twitter window
+		return err
+	}
+	if err := page.Session().SetWindow(mainWindow); err != nil { // move back to recruitment page window
+		return err
+	}
 	time.Sleep(1 * time.Second) // wait until wantedly window is ready again
 
 	// close support dialog. when it's your first time to supported the offer,
@@ -104,6 +121,8 @@ func supportOffer(elem *api.Element, page *agouti.Page, mainWindow *api.Window) 
 		closeButton = supportDialog.FindByButton("閉じる")
 	}
 	if err := closeButton.Click(); err != nil {
-		log.Fatalf("Failed to click close button for elem: %v, err: %v", elem, err)
+		log.Printf("Failed to click close button for elem: %v, err: %v", elem, err)
+		return err
 	}
+	return nil
 }
