@@ -4,15 +4,18 @@
 *.dll
 *.so
 *.dylib
- # Test binary, build with `go test -c`
+# Test binary, build with `go test -c`
 *.test
- # Output of the go coverage tool, specifically when used with LiteIDE
+# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
- # vendor
+# vendor
 vendor/
- # debug
+# debug
 debug
 debug_test
+
+# go module
+go.sum
 
 # config files
 supporterCfg.json
